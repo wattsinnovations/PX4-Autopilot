@@ -357,7 +357,7 @@ private:
 	int32_t		_flight_mode_slots[manual_control_switches_s::MODE_SLOT_NUM] {};
 
 	bool 		_controller_is_a_joystick{false};
-	bool 		_user_changed_mode{false};
+	bool		_user_changed_mode{false};
 
 	hrt_abstime	_boot_timestamp{0};
 	hrt_abstime	_last_disarmed_timestamp{0};
