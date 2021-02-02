@@ -515,13 +515,11 @@ transition_result_t Commander::disarm(arm_disarm_reason_t calling_reason)
 transition_result_t
 Commander::try_mode_change(main_state_t desired_mode, const bool enable_fallback, const bool notify_user)
 {
-
 	transition_result_t res = main_state_transition(_status, desired_mode, _status_flags, &_internal_state);
 
 	if (res == TRANSITION_DENIED) {
 
 		if (desired_mode == commander_state_s::MAIN_STATE_OFFBOARD) {
-
 			/* offboard does not have a fallback */
 			if (notify_user) {
 				print_reject_mode("Offboard");
@@ -531,7 +529,6 @@ Commander::try_mode_change(main_state_t desired_mode, const bool enable_fallback
 		}
 
 		if (desired_mode == commander_state_s::MAIN_STATE_AUTO_MISSION) {
-
 			/* fall back to loiter */
 			if (notify_user) {
 				print_reject_mode("Auto Mission");
@@ -544,7 +541,6 @@ Commander::try_mode_change(main_state_t desired_mode, const bool enable_fallback
 		}
 
 		if (desired_mode == commander_state_s::MAIN_STATE_AUTO_RTL && (res == TRANSITION_DENIED)) {
-
 			/* fall back to loiter */
 			if (notify_user) {
 				print_reject_mode("Auto RTL");
@@ -557,7 +553,6 @@ Commander::try_mode_change(main_state_t desired_mode, const bool enable_fallback
 		}
 
 		if (desired_mode == commander_state_s::MAIN_STATE_AUTO_LAND && (res == TRANSITION_DENIED)) {
-
 			/* fall back to loiter */
 			if (notify_user) {
 				print_reject_mode("Auto Land");
@@ -570,7 +565,6 @@ Commander::try_mode_change(main_state_t desired_mode, const bool enable_fallback
 		}
 
 		if (desired_mode == commander_state_s::MAIN_STATE_AUTO_TAKEOFF && (res == TRANSITION_DENIED)) {
-
 			/* fall back to loiter */
 			if (notify_user) {
 				print_reject_mode("Auto Takeoff");
@@ -583,7 +577,6 @@ Commander::try_mode_change(main_state_t desired_mode, const bool enable_fallback
 		}
 
 		if (desired_mode == commander_state_s::MAIN_STATE_AUTO_FOLLOW_TARGET && (res == TRANSITION_DENIED)) {
-
 			/* fall back to loiter */
 			if (notify_user) {
 				print_reject_mode("Auto Follow");
@@ -596,7 +589,6 @@ Commander::try_mode_change(main_state_t desired_mode, const bool enable_fallback
 		}
 
 		if (desired_mode == commander_state_s::MAIN_STATE_AUTO_LOITER && (res == TRANSITION_DENIED)) {
-
 			/* fall back to position control */
 			if (notify_user) {
 				print_reject_mode("Auto Hold");
@@ -606,11 +598,9 @@ Commander::try_mode_change(main_state_t desired_mode, const bool enable_fallback
 				desired_mode = commander_state_s::MAIN_STATE_POSCTL;
 				res = main_state_transition(_status, desired_mode, _status_flags, &_internal_state);
 			}
-
 		}
 
 		if (desired_mode == commander_state_s::MAIN_STATE_POSCTL && (res == TRANSITION_DENIED)) {
-
 			/* fall back to altitude control */
 			if (notify_user) {
 				print_reject_mode("Position");
@@ -620,11 +610,9 @@ Commander::try_mode_change(main_state_t desired_mode, const bool enable_fallback
 				desired_mode = commander_state_s::MAIN_STATE_ALTCTL;
 				res = main_state_transition(_status, desired_mode, _status_flags, &_internal_state);
 			}
-
 		}
 
 		if (desired_mode == commander_state_s::MAIN_STATE_ALTCTL && (res == TRANSITION_DENIED)) {
-
 			/* fall back to stabilized */
 			if (notify_user) {
 				print_reject_mode("Altitude");
@@ -634,11 +622,9 @@ Commander::try_mode_change(main_state_t desired_mode, const bool enable_fallback
 				desired_mode = commander_state_s::MAIN_STATE_STAB;
 				res = main_state_transition(_status, desired_mode, _status_flags, &_internal_state);
 			}
-
 		}
 
 		if (desired_mode == commander_state_s::MAIN_STATE_STAB && (res == TRANSITION_DENIED)) {
-
 			/* fall back to manual */
 			if (notify_user) {
 				print_reject_mode("Stabilized");
@@ -648,7 +634,6 @@ Commander::try_mode_change(main_state_t desired_mode, const bool enable_fallback
 				desired_mode = commander_state_s::MAIN_STATE_MANUAL;
 				res = main_state_transition(_status, desired_mode, _status_flags, &_internal_state);
 			}
-
 		}
 	}
 
