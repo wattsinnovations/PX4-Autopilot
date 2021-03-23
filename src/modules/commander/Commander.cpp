@@ -2268,6 +2268,13 @@ Commander::run()
 				}
 			}
 
+			if (_manual_control.isMavlink()) {
+				// if there's never been a mode change force position control as initial state
+				if (!_armed.armed && (_internal_state.main_state_changes == 0)) {
+					_internal_state.main_state = commander_state_s::MAIN_STATE_POSCTL;
+				}
+			}
+
 			if (_manual_control_switches_sub.update(&_manual_control_switches) || safety_updated) {
 
 				// handle landing gear switch if configured and in a manual mode
