@@ -47,10 +47,9 @@ void
 M95040DF::print_usage()
 {
 	PRINT_MODULE_USAGE_NAME("m95040df", "driver");
-	PRINT_MODULE_USAGE_SUBCATEGORY("baro");
+	PRINT_MODULE_USAGE_SUBCATEGORY("storage");
 	PRINT_MODULE_USAGE_COMMAND("start");
-	PRINT_MODULE_USAGE_PARAMS_I2C_SPI_DRIVER(true, true);
-	PRINT_MODULE_USAGE_PARAMS_I2C_ADDRESS(0x77);
+	PRINT_MODULE_USAGE_PARAMS_I2C_SPI_DRIVER(false, true);
 	PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
 }
 
@@ -60,8 +59,6 @@ I2CSPIDriverBase *M95040DF::instantiate(const BusCLIArguments &cli, const BusIns
 	device::Device *interface = nullptr;
 
 	if (iterator.busType() == BOARD_SPI_BUS) {
-		// Use 2 LSB as address -- differentiate from chip select values
-		PX4_WARN("devid: %d", iterator.devid());
 		interface = M95040DF_SPI_interface(iterator.bus(), iterator.devid(), cli.bus_frequency, cli.spi_mode);
 	}
 
@@ -96,6 +93,7 @@ extern "C" int m95040df_main(int argc, char *argv[])
 	using ThisDriver = M95040DF;
 	BusCLIArguments cli{false, true};
 	cli.default_spi_frequency = 2 * 1000 * 1000; // 2Mhz
+	cli.type = cli.chipselect_index; // work around for multiple instances of this driver
 
 	const char *verb = cli.parseDefaultArguments(argc, argv);
 

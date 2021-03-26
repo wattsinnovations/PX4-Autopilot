@@ -25,7 +25,7 @@ then
 	# Internal magnetometer on I2c
 	bmm150 -I -R 6 start
 
-	# Watts: Jake: start the SPI EEPROM driver on external (-S) SPI bus (-b) 6 with chip select (-c)
+	# SPI EEPROM drivers on external (-S) SPI bus (-b) 6 with chip select (-c)
 	m95040df -s -b 6 -c 1 start
 	m95040df -s -b 6 -c 2 start
 	m95040df -s -b 6 -c 3 start
