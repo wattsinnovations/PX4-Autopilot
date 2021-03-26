@@ -174,6 +174,9 @@
 #define DRV_DIST_DEVTYPE_SIM 0x9a
 #define DRV_DIST_DEVTYPE_SRF05 0x9b
 
+// Custom -- we should create a standard header for this (for auterion custom builds)
+#define DRV_DEVTYPE_M95040DF 0x9c
+
 #define DRV_DEVTYPE_UNUSED		0xff
 
 #endif /* _DRV_SENSOR_H */
