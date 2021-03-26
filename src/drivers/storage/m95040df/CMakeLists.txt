@@ -31,15 +31,14 @@
 #
 ############################################################################
 px4_add_module(
-	MODULE drivers__barometer__dps310
-	MAIN dps310
+	MODULE drivers__m95040df
+	MAIN m95040df
 	SRCS
-		DPS310.cpp
-		DPS310.hpp
-		DPS310_I2C.cpp
-		DPS310_SPI.cpp
-		dps310_main.cpp
+		M95040DF.cpp
+		M95040DF.hpp
+		M95040DF_I2C.cpp
+		M95040DF_SPI.cpp
+		m95040df_main.cpp
 	DEPENDS
-		drivers_barometer
 		px4_work_queue
 	)
