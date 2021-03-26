@@ -32,9 +32,9 @@
  ****************************************************************************/
 
 /**
- * @file M9504DF.cpp
+ * @file M95040DF.cpp
  *
- * Driver for the M9504DF EEPROM connected vi SPI.
+ * Driver for the M95040DF EEPROM connected vi SPI.
  *
  * 4kB
  *
@@ -47,18 +47,18 @@
 #include <px4_platform_common/px4_work_queue/ScheduledWorkItem.hpp>
 #include <px4_platform_common/i2c_spi_buses.h>
 
-#include "M9504DF_Registers.hpp"
+// #include "M95040DF_Registers.hpp"
 
-namespace m9504df
+namespace m95040df
 {
 
-using M9504DF::Register;
+// using M95040DF::Register;
 
-class M9504DF : public I2CSPIDriver<M9504DF>
+class M95040DF : public I2CSPIDriver<M95040DF>
 {
 public:
-	M9504DF(I2CSPIBusOption bus_option, int bus, device::Device *interface);
-	virtual ~M9504DF();
+	M95040DF(I2CSPIBusOption bus_option, int bus, device::Device *interface);
+	virtual ~M95040DF();
 
 	static I2CSPIDriverBase *instantiate(const BusCLIArguments &cli, const BusInstanceIterator &iterator,
 					     int runtime_instance);
@@ -74,10 +74,10 @@ private:
 	void			start();
 	int				reset();
 
-	uint8_t			RegisterRead(Register reg);
-	void			RegisterWrite(Register reg, uint8_t val);
-	void			RegisterSetBits(Register reg, uint8_t setbits);
-	void			RegisterClearBits(Register reg, uint8_t clearbits);
+	uint8_t			RegisterRead(uint8_t reg);
+	void			RegisterWrite(uint8_t reg, uint8_t val);
+	void			RegisterSetBits(uint8_t reg, uint8_t setbits);
+	void			RegisterClearBits(uint8_t reg, uint8_t clearbits);
 
 	static constexpr uint32_t SAMPLE_RATE{1}; // samples per second
 
@@ -87,4 +87,4 @@ private:
 	perf_counter_t		_comms_errors;
 };
 
-} // namespace m9504df
+} // namespace m95040df

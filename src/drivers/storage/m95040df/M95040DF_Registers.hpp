@@ -43,7 +43,7 @@ static constexpr uint8_t Bit5 = (1 << 5);
 static constexpr uint8_t Bit6 = (1 << 6);
 static constexpr uint8_t Bit7 = (1 << 7);
 
-namespace M9504DF
+namespace M95040DF
 {
 
 static constexpr uint8_t REV_AND_PROD_ID = 0x10;
@@ -107,4 +107,4 @@ enum COEF_SRCE_BIT : uint8_t {
 	TMP_COEF_SRCE = Bit7,	// TMP_COEF_SRCE
 };
 
-} // namespace M9504DF
+} // namespace M95040DF

@@ -26,7 +26,10 @@ then
 	bmm150 -I -R 6 start
 
 	# Watts: Jake: start the SPI EEPROM driver on external (-S) SPI bus (-b) 6 with chip select (-c)
-	m95040df -S -b 6 -c start
+	m95040df -s -b 6 -c 1 start
+	m95040df -s -b 6 -c 2 start
+	m95040df -s -b 6 -c 3 start
+	m95040df -s -b 6 -c 4 start
 
 else
 	#FMUv5Xbase board orientation

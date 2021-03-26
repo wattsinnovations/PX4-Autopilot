@@ -32,27 +32,27 @@
  ****************************************************************************/
 
 /**
- * @file M9504DF_SPI.cpp
+ * @file M95040DF_SPI.cpp
  *
- * SPI interface for M9504DF
+ * SPI interface for M95040DF
  */
 
 #include <lib/drivers/device/spi.h>
 
-namespace m9504df
+namespace m95040df
 {
 
 /* SPI protocol address bits */
 #define DIR_READ			(1<<7)
 #define DIR_WRITE			(0<<7)
 
-device::Device *M9504DF_SPI_interface(uint8_t bus, uint32_t device, int bus_frequency, spi_mode_e spi_mode);
+device::Device *M95040DF_SPI_interface(uint8_t bus, uint32_t device, int bus_frequency, spi_mode_e spi_mode);
 
-class M9504DF_SPI : public device::SPI
+class M95040DF_SPI : public device::SPI
 {
 public:
-	M9504DF_SPI(uint8_t bus, uint32_t device, int bus_frequency, spi_mode_e spi_mode);
-	virtual ~M9504DF_SPI() = default;
+	M95040DF_SPI(uint8_t bus, uint32_t device, int bus_frequency, spi_mode_e spi_mode);
+	virtual ~M95040DF_SPI() = default;
 
 	virtual int	read(unsigned address, void *data, unsigned count);
 	virtual int	write(unsigned address, void *data, unsigned count);
@@ -60,18 +60,18 @@ public:
 };
 
 device::Device *
-M9504DF_SPI_interface(uint8_t bus, uint32_t device, int bus_frequency, spi_mode_e spi_mode)
+M95040DF_SPI_interface(uint8_t bus, uint32_t device, int bus_frequency, spi_mode_e spi_mode)
 {
-	return new M9504DF_SPI(bus, device, bus_frequency, spi_mode);
+	return new M95040DF_SPI(bus, device, bus_frequency, spi_mode);
 }
 
-M9504DF_SPI::M9504DF_SPI(uint8_t bus, uint32_t device, int bus_frequency, spi_mode_e spi_mode) :
+M95040DF_SPI::M95040DF_SPI(uint8_t bus, uint32_t device, int bus_frequency, spi_mode_e spi_mode) :
 	SPI(DRV_DEVTYPE_M95040DF, MODULE_NAME, bus, device, spi_mode, bus_frequency)
 {
 }
 
 int
-M9504DF_SPI::read(unsigned address, void *data, unsigned count)
+M95040DF_SPI::read(unsigned address, void *data, unsigned count)
 {
 	uint8_t buf[32];
 
@@ -87,7 +87,7 @@ M9504DF_SPI::read(unsigned address, void *data, unsigned count)
 }
 
 int
-M9504DF_SPI::write(unsigned address, void *data, unsigned count)
+M95040DF_SPI::write(unsigned address, void *data, unsigned count)
 {
 	uint8_t buf[32];
 
@@ -101,4 +101,4 @@ M9504DF_SPI::write(unsigned address, void *data, unsigned count)
 	return transfer(&buf[0], &buf[0], count + 1);
 }
 
-} // namespace m9504df
+} // namespace m95040df

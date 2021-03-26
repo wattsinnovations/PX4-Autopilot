@@ -31,22 +31,22 @@
  *
  ****************************************************************************/
 
-#include "M9504DF.hpp"
+#include "M95040DF.hpp"
 
-namespace m9504df
+namespace m95040df
 {
-extern device::Device *M9504DF_SPI_interface(uint8_t bus, uint32_t device, int bus_frequency, spi_mode_e spi_mode);
+extern device::Device *M95040DF_SPI_interface(uint8_t bus, uint32_t device, int bus_frequency, spi_mode_e spi_mode);
 }
 
 #include <px4_platform_common/getopt.h>
 #include <px4_platform_common/module.h>
 
-using namespace m9504df;
+using namespace m95040df;
 
 void
-M9504DF::print_usage()
+M95040DF::print_usage()
 {
-	PRINT_MODULE_USAGE_NAME("m9504df", "driver");
+	PRINT_MODULE_USAGE_NAME("m95040df", "driver");
 	PRINT_MODULE_USAGE_SUBCATEGORY("baro");
 	PRINT_MODULE_USAGE_COMMAND("start");
 	PRINT_MODULE_USAGE_PARAMS_I2C_SPI_DRIVER(true, true);
@@ -54,17 +54,19 @@ M9504DF::print_usage()
 	PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
 }
 
-I2CSPIDriverBase *M9504DF::instantiate(const BusCLIArguments &cli, const BusInstanceIterator &iterator,
+I2CSPIDriverBase *M95040DF::instantiate(const BusCLIArguments &cli, const BusInstanceIterator &iterator,
 				      int runtime_instance)
 {
 	device::Device *interface = nullptr;
 
 	if (iterator.busType() == BOARD_SPI_BUS) {
-		interface = M9504DF_SPI_interface(iterator.bus(), iterator.devid(), cli.bus_frequency, cli.spi_mode);
+		// Use 2 LSB as address -- differentiate from chip select values
+		PX4_WARN("devid: %d", iterator.devid());
+		interface = M95040DF_SPI_interface(iterator.bus(), iterator.devid(), cli.bus_frequency, cli.spi_mode);
 	}
 
 	if (interface == nullptr) {
-		PX4_ERR("failed creating interface for bus %i (devid 0x%x)", iterator.bus(), iterator.devid());
+		PX4_WARN("failed creating interface for bus %i (devid 0x%x)", iterator.bus(), iterator.devid());
 		return nullptr;
 	}
 
@@ -74,7 +76,7 @@ I2CSPIDriverBase *M9504DF::instantiate(const BusCLIArguments &cli, const BusInst
 		return nullptr;
 	}
 
-	M9504DF *dev = new M9504DF(iterator.configuredBusOption(), iterator.bus(), interface);
+	M95040DF *dev = new M95040DF(iterator.configuredBusOption(), iterator.bus(), interface);
 
 	if (dev == nullptr) {
 		delete interface;
@@ -91,7 +93,7 @@ I2CSPIDriverBase *M9504DF::instantiate(const BusCLIArguments &cli, const BusInst
 
 extern "C" int m95040df_main(int argc, char *argv[])
 {
-	using ThisDriver = M9504DF;
+	using ThisDriver = M95040DF;
 	BusCLIArguments cli{false, true};
 	cli.default_spi_frequency = 2 * 1000 * 1000; // 2Mhz
 

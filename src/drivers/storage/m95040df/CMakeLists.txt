@@ -30,13 +30,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 ############################################################################
+
 px4_add_module(
 	MODULE drivers__m95040df
 	MAIN m95040df
 	SRCS
 		M95040DF.cpp
 		M95040DF.hpp
-		M95040DF_I2C.cpp
 		M95040DF_SPI.cpp
 		m95040df_main.cpp
 	DEPENDS

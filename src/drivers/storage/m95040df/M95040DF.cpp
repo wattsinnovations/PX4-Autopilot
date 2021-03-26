@@ -31,15 +31,15 @@
  *
  ****************************************************************************/
 
-#include "M9504DF.hpp"
+#include "M95040DF.hpp"
 
-using namespace M9504DF;
+// using namespace M95040DF;
 
-namespace m9504df
+namespace m95040df
 {
 
 
-M9504DF::M9504DF(I2CSPIBusOption bus_option, int bus, device::Device *interface) :
+M95040DF::M95040DF(I2CSPIBusOption bus_option, int bus, device::Device *interface) :
 	I2CSPIDriver(MODULE_NAME, px4::device_bus_to_wq(interface->get_device_id()), bus_option, bus,
 		     interface->get_device_address()),
 	_interface(interface),
@@ -48,7 +48,7 @@ M9504DF::M9504DF(I2CSPIBusOption bus_option, int bus, device::Device *interface)
 {
 }
 
-M9504DF::~M9504DF()
+M95040DF::~M95040DF()
 {
 	perf_free(_sample_perf);
 	perf_free(_comms_errors);
@@ -57,7 +57,7 @@ M9504DF::~M9504DF()
 }
 
 int
-M9504DF::init()
+M95040DF::init()
 {
 	// if (RegisterRead(Register::ID) != Infineon_DPS310::REV_AND_PROD_ID) {
 	// 	PX4_ERR("Product_ID mismatch");
@@ -75,7 +75,7 @@ M9504DF::init()
 }
 
 int
-M9504DF::reset()
+M95040DF::reset()
 {
 	// Soft Reset
 	// RegisterSetBits(Register::RESET, RESET_BIT::SOFT_RST);
@@ -85,17 +85,18 @@ M9504DF::reset()
 }
 
 void
-M9504DF::start()
+M95040DF::start()
 {
 	ScheduleOnInterval(1000000 / SAMPLE_RATE);
 }
 
 void
-M9504DF::RunImpl()
+M95040DF::RunImpl()
 {
 	perf_begin(_sample_perf);
 
-	PX4_INFO("Driver %d is running", interface);
+	PX4_INFO("Driver %d is running: %d", _interface->get_device_id(), _interface->get_device_address());
+
 
 	// Publish to uORB
 	// _px4_barometer.update(timestamp_sample, Pcomp / 100.0f); // Pascals -> Millibar
@@ -104,7 +105,7 @@ M9504DF::RunImpl()
 }
 
 uint8_t
-M9504DF::RegisterRead(Register reg)
+M95040DF::RegisterRead(uint8_t reg)
 {
 	uint8_t buf{};
 	_interface->read((uint8_t)reg, &buf, 1);
@@ -112,13 +113,13 @@ M9504DF::RegisterRead(Register reg)
 }
 
 void
-M9504DF::RegisterWrite(Register reg, uint8_t value)
+M95040DF::RegisterWrite(uint8_t reg, uint8_t value)
 {
 	_interface->write((uint8_t)reg, &value, 1);
 }
 
 void
-M9504DF::RegisterSetBits(Register reg, uint8_t setbits)
+M95040DF::RegisterSetBits(uint8_t reg, uint8_t setbits)
 {
 	uint8_t val = RegisterRead(reg);
 
@@ -129,7 +130,7 @@ M9504DF::RegisterSetBits(Register reg, uint8_t setbits)
 }
 
 void
-M9504DF::RegisterClearBits(Register reg, uint8_t clearbits)
+M95040DF::RegisterClearBits(uint8_t reg, uint8_t clearbits)
 {
 	uint8_t val = RegisterRead(reg);
 
@@ -140,11 +141,11 @@ M9504DF::RegisterClearBits(Register reg, uint8_t clearbits)
 }
 
 void
-M9504DF::print_status()
+M95040DF::print_status()
 {
 	I2CSPIDriverBase::print_status();
 	perf_print_counter(_sample_perf);
 	perf_print_counter(_comms_errors);
 }
 
-} // namespace m9504df
+} // namespace m95040df
