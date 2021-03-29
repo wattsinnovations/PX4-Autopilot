@@ -53,18 +53,12 @@ constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
 	initSPIBus(SPI::Bus::SPI5, {
 		initSPIDevice(SPIDEV_FLASH(0), SPI::CS{GPIO::PortG, GPIO::Pin7})
 	}),
-	initSPIBus(SPI::Bus::SPI6, {
-		initSPIDevice(DRV_DEVTYPE_M95040DF, SPI::CS{GPIO::PortI, GPIO::Pin10}),
-		initSPIDevice(DRV_DEVTYPE_M95040DF, SPI::CS{GPIO::PortA, GPIO::Pin15}),
-		initSPIDevice(DRV_DEVTYPE_M95040DF, SPI::CS{GPIO::PortD, GPIO::Pin11}),
-		initSPIDevice(DRV_DEVTYPE_M95040DF, SPI::CS{GPIO::PortD, GPIO::Pin12}),
+	initSPIBusExternal(SPI::Bus::SPI6, {
+		initSPIConfigExternal(SPI::CS{GPIO::PortI, GPIO::Pin10}),
+		initSPIConfigExternal(SPI::CS{GPIO::PortA, GPIO::Pin15}),
+		initSPIConfigExternal(SPI::CS{GPIO::PortD, GPIO::Pin11}),
+		initSPIConfigExternal(SPI::CS{GPIO::PortD, GPIO::Pin12}),
 	}),
-	// initSPIBusExternal(SPI::Bus::SPI6, {
-	// 	initSPIConfigExternal(SPI::CS{GPIO::PortI, GPIO::Pin10}),
-	// 	initSPIConfigExternal(SPI::CS{GPIO::PortA, GPIO::Pin15}),
-	// 	initSPIConfigExternal(SPI::CS{GPIO::PortD, GPIO::Pin11}),
-	// 	initSPIConfigExternal(SPI::CS{GPIO::PortD, GPIO::Pin12}),
-	// }),
 };
 
 static constexpr bool unused = validateSPIConfig(px4_spi_buses);
