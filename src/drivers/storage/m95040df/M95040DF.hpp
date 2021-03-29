@@ -42,8 +42,8 @@
 
 #pragma once
 
-#include <drivers/device/Device.hpp>
 #include <lib/perf/perf_counter.h>
+#include <lib/drivers/device/spi.h>
 #include <px4_platform_common/px4_work_queue/ScheduledWorkItem.hpp>
 #include <px4_platform_common/i2c_spi_buses.h>
 
@@ -54,34 +54,47 @@ namespace m95040df
 
 // using M95040DF::Register;
 
-class M95040DF : public I2CSPIDriver<M95040DF>
+// Definitions
+static constexpr int PAGE_SIZE_BYTES  = 16;
+static constexpr int MEM_SIZE_PAGES   = 32;
+// Commands
+static constexpr int CMD_WRITE_SR = 	1;
+static constexpr int CMD_WRITE = 		2;
+static constexpr int CMD_READ = 		3;
+static constexpr int CMD_WRITE_DIS = 	4;
+static constexpr int CMD_READ_SR = 		5;
+static constexpr int CMD_WRITE_EN = 	6;
+static constexpr int LOCATION_PAGE_NUM = 1;
+
+class M95040DF : public device::SPI, public I2CSPIDriver<M95040DF>
 {
 public:
-	M95040DF(I2CSPIBusOption bus_option, int bus, device::Device *interface);
+	M95040DF(I2CSPIBusOption bus_option, int bus, int devid, int bus_frequency,
+		spi_mode_e spi_mode);
 	virtual ~M95040DF();
 
 	static I2CSPIDriverBase *instantiate(const BusCLIArguments &cli, const BusInstanceIterator &iterator,
 					     int runtime_instance);
 	static void print_usage();
 
-	int				init();
+	virtual int		init();
 
 	void			print_status();
+
 	void			RunImpl();
 
 private:
 
 	void			start();
-	int				reset();
+	void 			stop();
+
+
+	int ReadPage(unsigned page_number, uint8_t* data);
 
 	uint8_t			RegisterRead(uint8_t reg);
 	void			RegisterWrite(uint8_t reg, uint8_t val);
-	void			RegisterSetBits(uint8_t reg, uint8_t setbits);
-	void			RegisterClearBits(uint8_t reg, uint8_t clearbits);
 
 	static constexpr uint32_t SAMPLE_RATE{1}; // samples per second
-
-	device::Device		*_interface;
 
 	perf_counter_t		_sample_perf;
 	perf_counter_t		_comms_errors;

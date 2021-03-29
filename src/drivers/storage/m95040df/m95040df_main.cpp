@@ -56,44 +56,29 @@ M95040DF::print_usage()
 I2CSPIDriverBase *M95040DF::instantiate(const BusCLIArguments &cli, const BusInstanceIterator &iterator,
 				      int runtime_instance)
 {
-	device::Device *interface = nullptr;
+	M95040DF *instance = new M95040DF(iterator.configuredBusOption(), iterator.bus(), iterator.devid(),
+				cli.bus_frequency, cli.spi_mode);
 
-	if (iterator.busType() == BOARD_SPI_BUS) {
-		interface = M95040DF_SPI_interface(iterator.bus(), iterator.devid(), cli.bus_frequency, cli.spi_mode);
-	}
-
-	if (interface == nullptr) {
-		PX4_WARN("failed creating interface for bus %i (devid 0x%x)", iterator.bus(), iterator.devid());
+	if (!instance) {
+		PX4_ERR("alloc failed");
 		return nullptr;
 	}
 
-	if (interface->init() != OK) {
-		delete interface;
-		PX4_DEBUG("no device on bus %i (devid 0x%x)", iterator.bus(), iterator.devid());
+	if (instance->init() != PX4_OK) {
+		delete instance;
 		return nullptr;
 	}
 
-	M95040DF *dev = new M95040DF(iterator.configuredBusOption(), iterator.bus(), interface);
-
-	if (dev == nullptr) {
-		delete interface;
-		return nullptr;
-	}
-
-	if (OK != dev->init()) {
-		delete dev;
-		return nullptr;
-	}
-
-	return dev;
+	return instance;
 }
 
 extern "C" int m95040df_main(int argc, char *argv[])
 {
 	using ThisDriver = M95040DF;
 	BusCLIArguments cli{false, true};
+	cli.spi_mode = SPIDEV_MODE0;
 	cli.default_spi_frequency = 2 * 1000 * 1000; // 2Mhz
-	cli.type = cli.chipselect_index; // work around for multiple instances of this driver
+	// cli.type = cli.chipselect_index; // work around for multiple instances of this driver
 
 	const char *verb = cli.parseDefaultArguments(argc, argv);
 

@@ -37,7 +37,6 @@ px4_add_module(
 	SRCS
 		M95040DF.cpp
 		M95040DF.hpp
-		M95040DF_SPI.cpp
 		m95040df_main.cpp
 	DEPENDS
 		px4_work_queue
