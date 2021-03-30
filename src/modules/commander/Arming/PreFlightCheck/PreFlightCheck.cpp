@@ -261,6 +261,10 @@ bool PreFlightCheck::preflightCheck(orb_advert_t *mavlink_log_pub, vehicle_statu
 	failed = failed || !manualControlCheck(mavlink_log_pub, report_failures);
 	failed = failed || !cpuResourceCheck(mavlink_log_pub, report_failures);
 
+	// Watts: Jake: maybe we implement this as a generic customCheck() that other users can implement somewhere
+	// for upstream compatibility? Not sure.
+	failed = failed || !prismCheck(mavlink_log_pub, report_failures);
+
 	/* Report status */
 	return !failed;
 }
