@@ -21,7 +21,7 @@ px4_add_board(
 		adc/board_adc
 		adc/ads1115
 		barometer # all available barometer drivers
-		batt_smbus
+		# batt_smbus
 		camera_capture
 		camera_trigger
 		differential_pressure # all available differential pressure drivers
@@ -30,9 +30,9 @@ px4_add_board(
 		gps
 		#heater
 		#imu # all available imu drivers
-		imu/analog_devices/adis16448
-		imu/adis16477
-		imu/adis16497
+		# imu/analog_devices/adis16448
+		# imu/adis16477
+		# imu/adis16497
 		imu/bosch/bmi088
 		imu/invensense/icm20602
 		imu/invensense/icm42688p
@@ -41,7 +41,7 @@ px4_add_board(
 		lights/rgbled
 		lights/rgbled_ncp5623c
 		magnetometer # all available magnetometer drivers
-		optical_flow # all available optical flow drivers
+		# optical_flow # all available optical flow drivers
 		#osd
 		#pca9685
 		pca9685_pwm_out
@@ -55,11 +55,11 @@ px4_add_board(
 		roboclaw
 		rpm
 		safety_button
-		storage
 		telemetry # all available telemetry drivers
 		test_ppm
 		tone_alarm
 		uavcan
+		watts
 	MODULES
 		airspeed_selector
 		attitude_estimator_q

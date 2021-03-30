@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2019 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2018-20 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,73 +31,50 @@
  *
  ****************************************************************************/
 
-/**
- * @file M95040DF.cpp
- *
- * Driver for the M95040DF EEPROM connected vi SPI.
- *
- * 4kB
- *
- */
-
 #pragma once
 
-#include <lib/perf/perf_counter.h>
-#include <lib/drivers/device/spi.h>
+#include <px4_platform_common/module.h>
+#include <px4_platform_common/module_params.h>
 #include <px4_platform_common/px4_work_queue/ScheduledWorkItem.hpp>
-#include <px4_platform_common/i2c_spi_buses.h>
 
-// #include "M95040DF_Registers.hpp"
+#include <uORB/Publication.hpp>
+#include <uORB/SubscriptionInterval.hpp>
+#include <uORB/topics/parameter_update.h>
+#include <uORB/topics/propulsion_system_info.h>
+#include <uORB/topics/propulsion_id_info.h>
 
-namespace m95040df
-{
+using namespace time_literals;
 
-// using M95040DF::Register;
-
-// Definitions
-static constexpr int PAGE_SIZE_BYTES  = 16;
-static constexpr int MEM_SIZE_PAGES   = 32;
-// Commands
-static constexpr int CMD_WRITE_SR = 	1;
-static constexpr int CMD_WRITE = 		2;
-static constexpr int CMD_READ = 		3;
-static constexpr int CMD_WRITE_DIS = 	4;
-static constexpr int CMD_READ_SR = 		5;
-static constexpr int CMD_WRITE_EN = 	6;
-static constexpr int LOCATION_PAGE_NUM = 1;
-
-class M95040DF : public device::SPI, public I2CSPIDriver<M95040DF>
+class PropulsionID : public ModuleBase<PropulsionID>, public ModuleParams, public px4::ScheduledWorkItem
 {
 public:
-	M95040DF(I2CSPIBusOption bus_option, int bus, int devid, int bus_frequency,
-		spi_mode_e spi_mode);
-	virtual ~M95040DF();
+	PropulsionID();
 
-	static I2CSPIDriverBase *instantiate(const BusCLIArguments &cli, const BusInstanceIterator &iterator,
-					     int runtime_instance);
-	static void print_usage();
+	virtual ~PropulsionID();
 
-	virtual int		init();
+	static int print_usage(const char *reason = nullptr);
+	static int custom_command(int argc, char *argv[]);
 
-	void			print_status();
+	static int task_spawn(int argc, char *argv[]);
 
-	void			RunImpl();
+	int start();
 
 private:
 
-	void			start();
-	void 			stop();
+	void Run() override;
 
+	uORB::Publication<propulsion_id_info_s> _propulsion_id_info_pub{ORB_ID(propulsion_id_info)};
 
-	int ReadPage(unsigned page_number, uint8_t* data);
+	uORB::Subscription _propulsion_system_info_sub{ORB_ID(propulsion_system_info)};
+	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1_s};
 
-	uint8_t			RegisterRead(uint8_t reg);
-	void			RegisterWrite(uint8_t reg, uint8_t val);
+	// TODO: are we going to use parameters for individual motor flight times?
 
-	static constexpr uint32_t SAMPLE_RATE{1}; // samples per second
-
-	perf_counter_t		_sample_perf;
-	perf_counter_t		_comms_errors;
+	// DEFINE_PARAMETERS(
+	// 	(ParamFloat<px4::params::SENS_IMU_TEMP_FF>) _param_sens_imu_temp_ff,
+	// 	(ParamFloat<px4::params::SENS_IMU_TEMP_I>)  _param_sens_imu_temp_i,
+	// 	(ParamFloat<px4::params::SENS_IMU_TEMP_P>)  _param_sens_imu_temp_p,
+	// 	(ParamInt<px4::params::SENS_TEMP_ID>)       _param_sens_temp_id,
+	// 	(ParamFloat<px4::params::SENS_IMU_TEMP>)    _param_sens_imu_temp
+	// )
 };
-
-} // namespace m95040df

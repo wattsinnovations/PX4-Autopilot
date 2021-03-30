@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2020 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2018-19 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,33 +31,7 @@
  *
  ****************************************************************************/
 
-#include "../PreFlightCheck.hpp"
 
-#include <systemlib/mavlink_log.h>
-#include <uORB/Subscription.hpp>
-#include <uORB/topics/propulsion_id_info.h>
+// PARAM_DEFINE_INT32(SENS_TEMP_ID, 0);
 
-using namespace time_literals;
-
-bool PreFlightCheck::prismCheck(orb_advert_t *mavlink_log_pub, const bool report_fail)
-{
-	bool success = true;
-
-	uORB::SubscriptionData<propulsion_id_info_s> info{ORB_ID(propulsion_id_info)};
-	info.update();
-
-	if (info.get().deny_arm) {
-
-		success = false;
-
-		if (info.get().mismatch) {
-			mavlink_log_critical(mavlink_log_pub, "Fail: Propulsion ID mismatch!");
-		} else if (info.get().missing) {
-			 mavlink_log_critical(mavlink_log_pub, "Fail: Missing Propulsion System: %d", info.get().missing_index);
-		} else {
-			mavlink_log_critical(mavlink_log_pub, "Fail: PRISM is denying arming. Unknown.");
-		}
-	}
-
-	return success;
-}
+// PARAM_DEFINE_FLOAT(SENS_IMU_TEMP, 55.0f);
