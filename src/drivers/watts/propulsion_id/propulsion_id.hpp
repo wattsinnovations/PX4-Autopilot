@@ -39,6 +39,7 @@
 
 #include <uORB/Publication.hpp>
 #include <uORB/SubscriptionInterval.hpp>
+#include <uORB/SubscriptionMultiArray.hpp>
 #include <uORB/topics/parameter_update.h>
 #include <uORB/topics/propulsion_system_info.h>
 #include <uORB/topics/propulsion_id_info.h>
@@ -63,9 +64,16 @@ private:
 
 	void Run() override;
 
-	uORB::Publication<propulsion_id_info_s> _propulsion_id_info_pub{ORB_ID(propulsion_id_info)};
+	propulsion_id_info_s get_propulsion_id_info();
 
-	uORB::Subscription _propulsion_system_info_sub{ORB_ID(propulsion_system_info)};
+	static constexpr uint32_t SAMPLE_RATE{1}; // samples per second
+	static constexpr uint32_t TIMEOUT_US{2000000}; // Time before driver reports an eeprom as missing
+
+	uORB::Publication<propulsion_id_info_s> _propulsion_id_info_pub{ORB_ID::propulsion_id_info};
+
+	// uORB::Subscription _propulsion_system_info_sub{ORB_ID(propulsion_system_info)};
+	uORB::SubscriptionMultiArray<propulsion_system_info_s> _propulsion_system_info_subs{ORB_ID::propulsion_system_info};
+
 	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1_s};
 
 	// TODO: are we going to use parameters for individual motor flight times?

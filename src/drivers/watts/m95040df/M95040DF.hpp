@@ -63,7 +63,11 @@ static constexpr int CMD_READ = 		3;
 static constexpr int CMD_WRITE_DIS = 	4;
 static constexpr int CMD_READ_SR = 		5;
 static constexpr int CMD_WRITE_EN = 	6;
+
+static constexpr int PROPULSION_ID_PAGE_NUM = 0;
 static constexpr int LOCATION_PAGE_NUM = 1;
+static constexpr int FLIGHT_TIME_PAGE_NUM = 31;
+
 
 class M95040DF : public device::SPI, public I2CSPIDriver<M95040DF>
 {
@@ -87,18 +91,22 @@ private:
 	void			start();
 	void 			stop();
 
+	uint64_t 		read_flight_time();
+	uint32_t 		read_propulsion_id();
+	uint8_t 		read_location();
 
-	int ReadPage(unsigned page_number, uint8_t* data);
+	int 			ReadPage(unsigned page_number, char* data);
 
 	uint8_t			RegisterRead(uint8_t reg);
-	void			RegisterWrite(uint8_t reg, uint8_t val);
 
 	static constexpr uint32_t SAMPLE_RATE{1}; // samples per second
 
-	uORB::Publication<propulsion_system_info_s> _propulsion_system_info_pub{ORB_ID(propulsion_system_info)};
+	uORB::Publication<propulsion_system_info_s> _prop_sys_info_pub{ORB_ID(propulsion_system_info)};
 
 	perf_counter_t		_sample_perf;
 	perf_counter_t		_comms_errors;
+
+	int _devid = {};
 };
 
 } // namespace m95040df

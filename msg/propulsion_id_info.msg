@@ -13,6 +13,4 @@ bool mismatch				# Flag indicating if there is a Propulsion System mismatch
 							# - Locations must be mutually exclusive
 							# - Propulsion IDs must match
 
-bool missing				# An EEPROM is missing
-uint8 missing_index			# Indicated which EEPROM is missing
-							# - Indexed from 1, when missing is false this shall be value 0
+bool[4] connected			# True if the EEPROM is connected

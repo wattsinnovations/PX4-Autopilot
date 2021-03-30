@@ -33,18 +33,18 @@
 
 #include "M95040DF.hpp"
 
-// using namespace M95040DF;
+#include "stdlib.h"
 
 namespace m95040df
 {
-
 
 M95040DF::M95040DF(I2CSPIBusOption bus_option, int bus, int devid, int bus_frequency,
 		 spi_mode_e spi_mode) :
 	SPI(DRV_DEVTYPE_M95040DF, MODULE_NAME, bus, devid, spi_mode, bus_frequency),
 	I2CSPIDriver(MODULE_NAME, px4::device_bus_to_wq(get_device_id()), bus_option, bus),
 	_sample_perf(perf_alloc(PC_ELAPSED, MODULE_NAME": read")),
-	_comms_errors(perf_alloc(PC_COUNT, MODULE_NAME": comm errors"))
+	_comms_errors(perf_alloc(PC_COUNT, MODULE_NAME": comm errors")),
+	_devid(devid)
 {
 }
 
@@ -59,7 +59,6 @@ M95040DF::init()
 {
 	SPI::set_lockmode(LOCK_THREADS);
 
-	// Do SPI init (and probe) first
 	if (SPI::init() != PX4_OK) {
 		return PX4_ERROR;
 	}
@@ -86,42 +85,95 @@ M95040DF::RunImpl()
 {
 	perf_begin(_sample_perf);
 
-	uint8_t val = RegisterRead(CMD_READ_SR);
+	// Check status register to ensure device is alive
+	uint8_t status = RegisterRead(CMD_READ_SR);
 
-	PX4_INFO("Status reg: %d", val);
+	// TODO: magic number
+	if (status != 240) {
+		PX4_INFO("Status register not 240! Is it connected? --> %d", _devid);
+		return;
+	}
 
+	propulsion_system_info_s info = {};
+	info.timestamp = hrt_absolute_time();
+	info.flight_time_ms = read_flight_time();
+	info.propulsion_id = read_propulsion_id();
+	info.location = read_location();
+	info.motor_number = _devid + 1; // add one since devid is zero indexed
 
-	// Read location page
-	// uint8_t buf[PAGE_SIZE_BYTES] = {};
-	// int ret = ReadPage(LOCATION_PAGE_NUM, buf);
-
-	// if (ret != PX4_OK) {
-	// 	PX4_INFO("ReadPage failed --> %d", ret);
-
-	// } else {
-	// 	// Publish to uORB
-	// 	// _px4_baromster.update(timestamp_sample, Pcomp / 100.0f); // Pascals -> Millibars
-	// }
-
-	// PX4_INFO("ReadPage data 1: %d", buf[0]);
-	// PX4_INFO("ReadPage data 2: %d", buf[1]);
-	// PX4_INFO("ReadPage data 3: %d", buf[2]);
-	// PX4_INFO("ReadPage data 4: %d\n", buf[3]);
-
-	// // Make it a string
-	// char str_buf[PAGE_SIZE_BYTES + 1] = {};
-	// memcpy(str_buf, buf, PAGE_SIZE_BYTES);
-	// str_buf[PAGE_SIZE_BYTES] = '\0';
-	// PX4_INFO("ReadPage data: %s", str_buf);
+	_prop_sys_info_pub.publish(info);
 
 	perf_end(_sample_perf);
 }
 
-// virtual int	read(unsigned address, void *data, unsigned count)
+uint32_t M95040DF::read_propulsion_id()
+{
+	// Read propulsion ID page
+	uint32_t propulsion_id = 0;
+	char buf[PAGE_SIZE_BYTES + 1] = {};
+	int ret = ReadPage(PROPULSION_ID_PAGE_NUM, buf);
+	buf[PAGE_SIZE_BYTES] = '\0';
 
-// Page numbers are zero indexed
+	if (ret != PX4_OK) {
+		PX4_INFO("ReadPage failed --> %d", ret);
+		return propulsion_id;
+	}
+
+	propulsion_id = strtoul(buf, NULL, 0);;
+
+	return propulsion_id;
+}
+
+uint64_t M95040DF::read_flight_time()
+{
+	// Read flight time page
+	uint64_t flight_time = 0;
+	char buf[PAGE_SIZE_BYTES + 1] = {};
+	int ret = ReadPage(FLIGHT_TIME_PAGE_NUM, buf);
+	buf[PAGE_SIZE_BYTES] = '\0';
+
+	if (ret != PX4_OK) {
+		PX4_INFO("ReadPage failed --> %d", ret);
+		return flight_time;
+	}
+
+	flight_time = strtoull(buf, NULL, 0);
+
+	return flight_time;
+}
+
+uint8_t M95040DF::read_location()
+{
+	// Read location page
+	uint8_t location = 0;
+	char buf[PAGE_SIZE_BYTES + 1] = {};
+	int ret = ReadPage(LOCATION_PAGE_NUM, buf);
+	buf[PAGE_SIZE_BYTES] = '\0';
+
+	if (ret != PX4_OK) {
+		PX4_INFO("ReadPage failed --> %d", ret);
+		return location;
+	}
+
+	if (!strcmp(buf, "FR")) {
+		location = 1;
+
+	} else if (!strcmp(buf, "BR")) {
+		location = 2;
+
+	} else if (!strcmp(buf, "BL")) {
+		location = 3;
+
+	} else if (!strcmp(buf, "FL")) {
+		location = 4;
+	}
+
+	return location;
+}
+
+// Page numbers are zero indexed. All data is stored as strings and therfore must be converted after reading.
 int
-M95040DF::ReadPage(unsigned page_number, uint8_t* data)
+M95040DF::ReadPage(unsigned page_number, char* data)
 {
 	if (page_number > MEM_SIZE_PAGES - 1) {
 		return -1;
@@ -144,11 +196,9 @@ M95040DF::ReadPage(unsigned page_number, uint8_t* data)
 	buffer[0] = command;
 	buffer[1] = byteAddress;
 
-	uint8_t recv_buf[PAGE_SIZE_BYTES] = {};
+	int ret = transfer(buffer, buffer, PAGE_SIZE_BYTES + 2);
 
-	int ret = transfer(buffer, recv_buf, PAGE_SIZE_BYTES + 2);
-
-	memcpy(data, recv_buf, PAGE_SIZE_BYTES);
+	memcpy(data, &buffer[2], PAGE_SIZE_BYTES);
 
 	return ret;
 }
@@ -156,7 +206,7 @@ M95040DF::ReadPage(unsigned page_number, uint8_t* data)
 uint8_t
 M95040DF::RegisterRead(uint8_t reg)
 {
-	uint8_t buf[32] = {};
+	uint8_t buf[2] = {};
 
 	buf[0] = reg;
 
@@ -166,16 +216,8 @@ M95040DF::RegisterRead(uint8_t reg)
 		PX4_INFO("RegisterRead transfer() failed");
 	}
 
-	uint8_t wtf = buf[1];
-
-	return wtf;
+	return buf[1];
 }
-
-// void
-// M95040DF::RegisterWrite(uint8_t reg, uint8_t value)
-// {
-// 	_interface->write((uint8_t)reg, &value, 1);
-// }
 
 void
 M95040DF::print_status()

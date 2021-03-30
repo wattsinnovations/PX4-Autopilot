@@ -63,31 +63,79 @@ void PropulsionID::Run()
 		ModuleParams::updateParams();
 	}
 
-	// Collect Propulsion System Info
-	propulsion_system_info_s prop_sys_info = {};
-	if (_propulsion_system_info_sub.update(&prop_sys_info)) {
 
-		// Check if any are missing
+	auto info = get_propulsion_id_info();
+
+	info.timestamp = hrt_absolute_time();
+
+
+	_propulsion_id_info_pub.publish(info);
+}
+
+propulsion_id_info_s PropulsionID::get_propulsion_id_info()
+{
+	propulsion_id_info_s info = {};
+	// bool deny_arm;
+	// bool mismatch;
+	// bool connected[4];
+
+	// Check if any are missing
+	int advertised_count = _propulsion_system_info_subs.advertised_count();
+	if (advertised_count != 4) {
+
+		info.deny_arm = true;
+
+		// We're missing one or more, we need to iterate over the subscription list and mark which motors are connected
+		for (auto &sub : _propulsion_system_info_subs) {
+			// Grab the motor number from the last report for each subscription
+			propulsion_system_info_s data = {};
+			sub.copy(&data);
+			uint8_t index = data.motor_number - 1; // Motor Numbers are 1 indexed.
+			info.connected[index] = true;
+		}
+
+		return info;
+	}
+
+	// Grab the time only once for efficiency
+	uint64_t time_now = hrt_absolute_time();
+
+	// All EEPROMS are connected. Now iterate and check other things.
+	for (auto &sub : _propulsion_system_info_subs) {
+
+		propulsion_system_info_s data = {};
+		if (sub.update(&data)) {
+
+		} else {
+			// Check if we need to mark it as timed out
+			sub.copy(&data); // Grab the last report
+			uint8_t index = data.motor_number - 1; // Motor Numbers are 1 indexed.
+
+			if ((time_now - data.timestamp) > TIMEOUT_US) {
+				PX4_WARN("Motor %d timed out!", data.motor_number);
+				info.connected[index] = false;
+				info.deny_arm = true;
+				continue;
+			}
+		}
 
 		// Check if Propulsion IDs match
 
 		// Check if Locations are mutually exclusive
 
-		// Check if Locations are in the correct order
+		// Check if Locations match the Motor Number
+		if (data.location != data.motor_number) {
+			info.deny_arm = true;
+			info.mismatch = true;
+		}
+	} // for
 
-	}
-
-	// Publish status
-	propulsion_id_info_s info{};
-
-	info.timestamp = hrt_absolute_time();
-
-	_propulsion_id_info_pub.publish(info);
+	return info;
 }
 
 int PropulsionID::start()
 {
-	ScheduleNow();
+	ScheduleOnInterval(1000000 / SAMPLE_RATE);
 	return PX4_OK;
 }
 

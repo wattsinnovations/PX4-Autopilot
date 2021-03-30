@@ -52,10 +52,15 @@ bool PreFlightCheck::prismCheck(orb_advert_t *mavlink_log_pub, const bool report
 
 		if (info.get().mismatch) {
 			mavlink_log_critical(mavlink_log_pub, "Fail: Propulsion ID mismatch!");
-		} else if (info.get().missing) {
-			 mavlink_log_critical(mavlink_log_pub, "Fail: Missing Propulsion System: %d", info.get().missing_index);
 		} else {
 			mavlink_log_critical(mavlink_log_pub, "Fail: PRISM is denying arming. Unknown.");
+		}
+
+		for (int i = 0; i < 4; i++) {
+			bool connected = info.get().connected[i];
+			if (!connected) {
+				mavlink_log_critical(mavlink_log_pub, "Fail: Propulsion System %d not connected!", i + 1);
+			}
 		}
 	}
 
