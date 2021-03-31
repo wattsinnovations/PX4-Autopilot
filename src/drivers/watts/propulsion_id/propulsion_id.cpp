@@ -33,10 +33,13 @@
 
 #include "propulsion_id.hpp"
 
+#include <drivers/drv_hrt.h>
+#include <systemlib/mavlink_log.h>
 #include <px4_platform_common/shutdown.h>
 #include <px4_platform_common/getopt.h>
 #include <px4_platform_common/log.h>
-#include <drivers/drv_hrt.h>
+
+extern orb_advert_t mavlink_log_pub;
 
 PropulsionID::PropulsionID() :
 	ModuleParams(nullptr),
@@ -74,6 +77,7 @@ propulsion_id_info_s PropulsionID::get_propulsion_id_info()
 {
 	propulsion_id_info_s info = {};
 	info.deny_arm = true;
+	bool correct_motor_order = true;
 
 	// Grab the time only once for efficiency
 	uint64_t time_now = hrt_absolute_time();
@@ -120,7 +124,6 @@ propulsion_id_info_s PropulsionID::get_propulsion_id_info()
 			}
 		}
 
-		// Copy the data
 		info.locations[data.motor_number - 1] = data.location;
 		info.propulsion_ids[data.motor_number - 1] = data.propulsion_id;
 		info.flight_times[data.motor_number - 1] = data.flight_time_ms;
@@ -128,8 +131,7 @@ propulsion_id_info_s PropulsionID::get_propulsion_id_info()
 		// Check if Locations match the Motor Number -- this would indicate an issue with firmware chip select
 		// ordering and is therefore only a sanity check.
 		if (data.location != data.motor_number) {
-			PX4_WARN("Motor ordering is incorrect!\n- Motor: %d\n- Location: %d", data.motor_number, data.location);
-			return info;
+			correct_motor_order = false;
 		}
 	}
 
@@ -154,34 +156,60 @@ propulsion_id_info_s PropulsionID::get_propulsion_id_info()
 		sprintf(error_message, "Missing Propulsion system(s)\n- Connected: [%d, %d, %d, %d]",
 				info.connected[0], info.connected[1], info.connected[2], info.connected[3]);
 
+	} else if (!correct_motor_order) {
+		sprintf(error_message, "Motor order is incorrect!\n- Locations: [%d, %d, %d, %d]",
+			info.locations[0], info.locations[1], info.locations[2], info.locations[3]);
+
 	} else if (!propulsion_ids_match) {
-		sprintf(error_message, "Propulsion IDs do not match!\n- IDs: [%d, %d, %d, %d",
+		sprintf(error_message, "Propulsion IDs do not match!\n- IDs: [%d, %d, %d, %d]",
 			info.propulsion_ids[0], info.propulsion_ids[1], info.propulsion_ids[2], info.propulsion_ids[3]);
 
 	} else if (!mutually_exclusive) {
-		sprintf(error_message, "Propulsion locations are not mutually exclusive!\n- Locations: [%d, %d, %d, %d",
+		sprintf(error_message, "Propulsion locations are not mutually exclusive!\n- Locations: [%d, %d, %d, %d]",
 			info.locations[0], info.locations[1], info.locations[2], info.locations[3]);
 	}
 
-	bool all_checks_passed = all_connected && propulsion_ids_match && mutually_exclusive;
+	bool all_checks_passed = all_connected && correct_motor_order &&
+							propulsion_ids_match && mutually_exclusive;
 
 	// If all the checks have passed, check if the Propulsion Group is already configured
 	if (all_checks_passed) {
+
 		info.deny_arm = false;
-		// bool detected_propulsion_group = info.propulsion_ids[0];
-		bool configured = true; // TODO: read the PROPULSION_GROUP parameter and compare
+
+		int propulsion_group = _param_prop_group.get();
+		bool configured = info.propulsion_ids[0] == propulsion_group;
 
 		if (!configured) {
-			// Set the airframe and tuning parameters
 
-			// Set PROPULSION_GROUP parameter
+			mavlink_log_critical(&mavlink_log_pub, "Propulsion Configuration has changed. Reconfiguring.");
 
-			// Reboot
-			px4_reboot_request();
+			_param_sys_autoconfig.set(2); // Reload airframe parameters -- PROPULSION_GROUP is
+										  // set in the airframe file
+
+			switch (propulsion_group) {
+			case 1:
+				_param_sys_autostart.set(PRISM_AIRFRAME_ID_QUAD);
+				info.reboot = true;
+				break;
+
+			case 2:
+				_param_sys_autostart.set(PRISM_AIRFRAME_ID_QUAD);
+				info.reboot = true;
+				break;
+
+			default:
+				mavlink_log_critical(&mavlink_log_pub, "Unknown Propulsion Group: %d", propulsion_group);
+				break;
+			}
+
+			if (info.reboot) {
+				px4_reboot_request();
+			}
 		}
 
 	} else {
-		PX4_WARN("error: %s", error_message);
+		mavlink_log_critical(&mavlink_log_pub, "error: %s", error_message);
 	}
 
 	return info;

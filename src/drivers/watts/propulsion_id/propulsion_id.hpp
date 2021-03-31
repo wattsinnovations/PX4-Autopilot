@@ -69,6 +69,10 @@ private:
 	static constexpr uint32_t SAMPLE_RATE{1}; // samples per second
 	static constexpr uint32_t TIMEOUT_US{1000000}; // Time before driver reports an eeprom as missing
 
+	static constexpr uint32_t PRISM_AIRFRAME_ID_QUAD{9500};
+	static constexpr uint32_t PRISM_AIRFRAME_ID_X8{9501};
+
+
 	uORB::Publication<propulsion_id_info_s> _propulsion_id_info_pub{ORB_ID::propulsion_id_info};
 
 	// uORB::Subscription _propulsion_system_info_sub{ORB_ID(propulsion_system_info)};
@@ -78,11 +82,9 @@ private:
 
 	// TODO: are we going to use parameters for individual motor flight times?
 
-	// DEFINE_PARAMETERS(
-	// 	(ParamFloat<px4::params::SENS_IMU_TEMP_FF>) _param_sens_imu_temp_ff,
-	// 	(ParamFloat<px4::params::SENS_IMU_TEMP_I>)  _param_sens_imu_temp_i,
-	// 	(ParamFloat<px4::params::SENS_IMU_TEMP_P>)  _param_sens_imu_temp_p,
-	// 	(ParamInt<px4::params::SENS_TEMP_ID>)       _param_sens_temp_id,
-	// 	(ParamFloat<px4::params::SENS_IMU_TEMP>)    _param_sens_imu_temp
-	// )
+	DEFINE_PARAMETERS(
+		(ParamInt<px4::params::SYS_AUTOSTART>) _param_sys_autostart,
+		(ParamInt<px4::params::SYS_AUTOCONFIG>) _param_sys_autoconfig,
+		(ParamInt<px4::params::PROPULSION_GROUP>) _param_prop_group
+	)
 };
