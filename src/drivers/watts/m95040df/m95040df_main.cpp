@@ -78,7 +78,7 @@ extern "C" int m95040df_main(int argc, char *argv[])
 	BusCLIArguments cli{false, true};
 	cli.spi_mode = SPIDEV_MODE0;
 	cli.default_spi_frequency = 2 * 1000 * 1000; // 2Mhz
-	// cli.type = cli.chipselect_index; // work around for multiple instances of this driver
+	cli.type = cli.chipselect_index; // work around for multiple instances of this driver
 
 	const char *verb = cli.parseDefaultArguments(argc, argv);
 

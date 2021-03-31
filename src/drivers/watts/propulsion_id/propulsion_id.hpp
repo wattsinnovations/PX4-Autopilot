@@ -67,7 +67,7 @@ private:
 	propulsion_id_info_s get_propulsion_id_info();
 
 	static constexpr uint32_t SAMPLE_RATE{1}; // samples per second
-	static constexpr uint32_t TIMEOUT_US{2000000}; // Time before driver reports an eeprom as missing
+	static constexpr uint32_t TIMEOUT_US{1000000}; // Time before driver reports an eeprom as missing
 
 	uORB::Publication<propulsion_id_info_s> _propulsion_id_info_pub{ORB_ID::propulsion_id_info};
 

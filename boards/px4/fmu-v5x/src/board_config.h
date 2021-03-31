@@ -203,7 +203,7 @@
 #define GPIO_TIM5_CH4IN      /* PI0  T5C4   FMU_CAP1 */ GPIO_TIM5_CH4IN_2
 #define GPIO_TIM5_CH4OUT     /* PI0  T5C4   FMU_CAP1 */ GPIO_TIM5_CH4OUT_2
 
-#define DIRECT_PWM_CAPTURE_CHANNELS  1
+// #define DIRECT_PWM_CAPTURE_CHANNELS  1
 
 /* PC12 is nARMED
  *  The GPIO will be set as input while not armed HW will have external HW Pull UP.
@@ -217,10 +217,12 @@
 #endif
 /* PWM
  */
-#define DIRECT_PWM_OUTPUT_CHANNELS  8
-#define DIRECT_INPUT_TIMER_CHANNELS  8
+// #define DIRECT_PWM_OUTPUT_CHANNELS  8
+// #define DIRECT_INPUT_TIMER_CHANNELS  8
+#define DIRECT_PWM_OUTPUT_CHANNELS  4
+#define DIRECT_INPUT_TIMER_CHANNELS  4
 
-#define BOARD_DSHOT_MOTOR_ASSIGNMENT {3, 2, 1, 0, 4, 5, 6, 7};
+// #define BOARD_DSHOT_MOTOR_ASSIGNMENT {3, 2, 1, 0, 4, 5, 6, 7};
 
 /* Power supply control and monitoring GPIOs */
 
@@ -304,10 +306,12 @@
 #define GPIO_INPUT_CAP1        /*  PI0 */ GPIO_TIM5_CH4IN
 #define BOARD_CAPTURE_GPIO /* PI0 */  (GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTI|GPIO_PIN0)
 
+
+// USING THIS FOR SPI
 /* PWM input driver. Use FMU AUX5 pins attached to timer4 channel 2 */
-#define PWMIN_TIMER                       4
-#define PWMIN_TIMER_CHANNEL    /* T4C2 */ 2
-#define GPIO_PWM_IN            /* PD13 */ GPIO_TIM4_CH2IN_2
+// #define PWMIN_TIMER                       4
+// #define PWMIN_TIMER_CHANNEL    /* T4C2 */ 2
+// #define GPIO_PWM_IN            /* PD13 */ GPIO_TIM4_CH2IN_2
 
 /* Safety Switch is HW version dependent on having an PX4IO
  * So we init to a benign state with the _INIT definition

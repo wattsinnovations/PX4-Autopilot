@@ -90,7 +90,8 @@ M95040DF::RunImpl()
 
 	// TODO: magic number
 	if (status != 240) {
-		PX4_INFO("Status register not 240! Is it connected? --> %d", _devid);
+		// PX4_INFO("Status register not 240! Is it connected? --> %d", _devid);
+		perf_count(_comms_errors);
 		return;
 	}
 
@@ -115,7 +116,8 @@ uint32_t M95040DF::read_propulsion_id()
 	buf[PAGE_SIZE_BYTES] = '\0';
 
 	if (ret != PX4_OK) {
-		PX4_INFO("ReadPage failed --> %d", ret);
+		// PX4_INFO("ReadPage failed --> %d", ret);
+		perf_count(_comms_errors);
 		return propulsion_id;
 	}
 
@@ -133,7 +135,8 @@ uint64_t M95040DF::read_flight_time()
 	buf[PAGE_SIZE_BYTES] = '\0';
 
 	if (ret != PX4_OK) {
-		PX4_INFO("ReadPage failed --> %d", ret);
+		// PX4_INFO("ReadPage failed --> %d", ret);
+		perf_count(_comms_errors);
 		return flight_time;
 	}
 
@@ -151,7 +154,8 @@ uint8_t M95040DF::read_location()
 	buf[PAGE_SIZE_BYTES] = '\0';
 
 	if (ret != PX4_OK) {
-		PX4_INFO("ReadPage failed --> %d", ret);
+		// PX4_INFO("ReadPage failed --> %d", ret);
+		perf_count(_comms_errors);
 		return location;
 	}
 
@@ -210,11 +214,7 @@ M95040DF::RegisterRead(uint8_t reg)
 
 	buf[0] = reg;
 
-	int ret = transfer(&buf[0], &buf[0], 2);
-
-	if (ret != PX4_OK) {
-		PX4_INFO("RegisterRead transfer() failed");
-	}
+	transfer(&buf[0], &buf[0], 2);
 
 	return buf[1];
 }

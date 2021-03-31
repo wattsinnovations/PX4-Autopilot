@@ -33,6 +33,7 @@
 
 #include "propulsion_id.hpp"
 
+#include <px4_platform_common/shutdown.h>
 #include <px4_platform_common/getopt.h>
 #include <px4_platform_common/log.h>
 #include <drivers/drv_hrt.h>
@@ -66,69 +67,122 @@ void PropulsionID::Run()
 
 	auto info = get_propulsion_id_info();
 
-	info.timestamp = hrt_absolute_time();
-
-
 	_propulsion_id_info_pub.publish(info);
 }
 
 propulsion_id_info_s PropulsionID::get_propulsion_id_info()
 {
 	propulsion_id_info_s info = {};
-	// bool deny_arm;
-	// bool mismatch;
-	// bool connected[4];
-
-	// Check if any are missing
-	int advertised_count = _propulsion_system_info_subs.advertised_count();
-	if (advertised_count != 4) {
-
-		info.deny_arm = true;
-
-		// We're missing one or more, we need to iterate over the subscription list and mark which motors are connected
-		for (auto &sub : _propulsion_system_info_subs) {
-			// Grab the motor number from the last report for each subscription
-			propulsion_system_info_s data = {};
-			sub.copy(&data);
-			uint8_t index = data.motor_number - 1; // Motor Numbers are 1 indexed.
-			info.connected[index] = true;
-		}
-
-		return info;
-	}
+	info.deny_arm = true;
 
 	// Grab the time only once for efficiency
 	uint64_t time_now = hrt_absolute_time();
+	info.timestamp = time_now;
 
 	// All EEPROMS are connected. Now iterate and check other things.
 	for (auto &sub : _propulsion_system_info_subs) {
 
+		// Ignore instances that have never been advertised
+		if (!sub.advertised()) {
+			continue;
+		}
+
+		// Check if any have timed out
 		propulsion_system_info_s data = {};
 		if (sub.update(&data)) {
+
+			int index = data.motor_number - 1; // Motor Numbers are 1 indexed.
+
+			if (index < 0) {
+				PX4_WARN("Invalid index %d", index);
+				return info;
+			}
+
+			info.connected[index] = true;
 
 		} else {
 			// Check if we need to mark it as timed out
 			sub.copy(&data); // Grab the last report
-			uint8_t index = data.motor_number - 1; // Motor Numbers are 1 indexed.
+			int index = data.motor_number - 1; // Motor Numbers are 1 indexed.
 
-			if ((time_now - data.timestamp) > TIMEOUT_US) {
+			// Sanity check
+			if (index < 0) {
+				PX4_WARN("Invalid index %d", index);
+				return info;
+			}
+
+			bool timed_out = (time_now - data.timestamp) > TIMEOUT_US;
+
+			if (timed_out) {
 				PX4_WARN("Motor %d timed out!", data.motor_number);
 				info.connected[index] = false;
-				info.deny_arm = true;
 				continue;
 			}
 		}
 
-		// Check if Propulsion IDs match
+		// Copy the data
+		info.locations[data.motor_number - 1] = data.location;
+		info.propulsion_ids[data.motor_number - 1] = data.propulsion_id;
+		info.flight_times[data.motor_number - 1] = data.flight_time_ms;
 
-		// Check if Locations are mutually exclusive
-
-		// Check if Locations match the Motor Number
+		// Check if Locations match the Motor Number -- this would indicate an issue with firmware chip select
+		// ordering and is therefore only a sanity check.
 		if (data.location != data.motor_number) {
-			info.deny_arm = true;
-			info.mismatch = true;
+			PX4_WARN("Motor ordering is incorrect!\n- Motor: %d\n- Location: %d", data.motor_number, data.location);
+			return info;
 		}
-	} // for
+	}
+
+	// Check if they're all connected
+	bool all_connected = true && (info.connected[0] == info.connected[1] &&
+				info.connected[1] == info.connected[2] &&
+				info.connected[2] == info.connected[3]);
+
+	// Check if Propulsion IDs match
+	bool propulsion_ids_match = info.propulsion_ids[0] == info.propulsion_ids[1] &&
+				info.propulsion_ids[1] == info.propulsion_ids[2] &&
+				info.propulsion_ids[2] == info.propulsion_ids[3];
+
+	// Check if Locations are mutually exclusive
+	bool mutually_exclusive = info.locations[0] != info.locations[1] &&
+				info.locations[1] != info.locations[2] &&
+				info.locations[2] != info.locations[3];
+
+	char error_message[128] = "Unknown";
+
+	if (!all_connected) {
+		sprintf(error_message, "Missing Propulsion system(s)\n- Connected: [%d, %d, %d, %d]",
+				info.connected[0], info.connected[1], info.connected[2], info.connected[3]);
+
+	} else if (!propulsion_ids_match) {
+		sprintf(error_message, "Propulsion IDs do not match!\n- IDs: [%d, %d, %d, %d",
+			info.propulsion_ids[0], info.propulsion_ids[1], info.propulsion_ids[2], info.propulsion_ids[3]);
+
+	} else if (!mutually_exclusive) {
+		sprintf(error_message, "Propulsion locations are not mutually exclusive!\n- Locations: [%d, %d, %d, %d",
+			info.locations[0], info.locations[1], info.locations[2], info.locations[3]);
+	}
+
+	bool all_checks_passed = all_connected && propulsion_ids_match && mutually_exclusive;
+
+	// If all the checks have passed, check if the Propulsion Group is already configured
+	if (all_checks_passed) {
+		info.deny_arm = false;
+		// bool detected_propulsion_group = info.propulsion_ids[0];
+		bool configured = true; // TODO: read the PROPULSION_GROUP parameter and compare
+
+		if (!configured) {
+			// Set the airframe and tuning parameters
+
+			// Set PROPULSION_GROUP parameter
+
+			// Reboot
+			px4_reboot_request();
+		}
+
+	} else {
+		PX4_WARN("error: %s", error_message);
+	}
 
 	return info;
 }

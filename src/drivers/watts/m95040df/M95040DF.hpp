@@ -47,7 +47,7 @@
 #include <px4_platform_common/px4_work_queue/ScheduledWorkItem.hpp>
 #include <px4_platform_common/i2c_spi_buses.h>
 
-#include <uORB/Publication.hpp>
+#include <uORB/PublicationMulti.hpp>
 #include <uORB/topics/propulsion_system_info.h>
 
 namespace m95040df
@@ -99,9 +99,9 @@ private:
 
 	uint8_t			RegisterRead(uint8_t reg);
 
-	static constexpr uint32_t SAMPLE_RATE{1}; // samples per second
+	static constexpr uint32_t SAMPLE_RATE{5}; // samples per second
 
-	uORB::Publication<propulsion_system_info_s> _prop_sys_info_pub{ORB_ID(propulsion_system_info)};
+	uORB::PublicationMultiData<propulsion_system_info_s> _prop_sys_info_pub{ORB_ID(propulsion_system_info)};
 
 	perf_counter_t		_sample_perf;
 	perf_counter_t		_comms_errors;

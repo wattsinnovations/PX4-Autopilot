@@ -30,8 +30,11 @@ then
 	# m95040df -S -b 1 -c 2 start
 	# m95040df -S -b 1 -c 3 start
 	# m95040df -S -b 1 -c 4 start
-	# m95040df -S -b 1 -c 3 stop
+	# m95040df stop
+	# propulsion_id start
 	# listener propulsion_system_info
+	# listener propulsion_id_info
+
 
 else
 	#FMUv5Xbase board orientation

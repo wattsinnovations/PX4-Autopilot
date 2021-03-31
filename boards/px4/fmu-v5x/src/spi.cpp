@@ -54,10 +54,12 @@ constexpr px4_spi_bus_t px4_spi_buses[SPI_BUS_MAX_BUS_ITEMS] = {
 		initSPIDevice(SPIDEV_FLASH(0), SPI::CS{GPIO::PortG, GPIO::Pin7})
 	}),
 	initSPIBusExternal(SPI::Bus::SPI6, {
-		initSPIConfigExternal(SPI::CS{GPIO::PortI, GPIO::Pin10}), // cs1
-		initSPIConfigExternal(SPI::CS{GPIO::PortA, GPIO::Pin15}), // cs2 -- no worky
-		initSPIConfigExternal(SPI::CS{GPIO::PortD, GPIO::Pin11}), // cs3 drdy1
-		initSPIConfigExternal(SPI::CS{GPIO::PortD, GPIO::Pin12}), // cs4 drdy2 -- no worky
+		// TODO: revisit for production builds!!!
+		// Order these such that chip selects match the PRISM motor ordering -- CW 1 thru 4
+		initSPIConfigExternal(SPI::CS{GPIO::PortH, GPIO::Pin9}),  // FMU CH8 -- CS 1
+		initSPIConfigExternal(SPI::CS{GPIO::PortD, GPIO::Pin14}), // FMU CH6 -- CS 2
+		initSPIConfigExternal(SPI::CS{GPIO::PortD, GPIO::Pin13}), // FMU CH5 -- CS 3
+		initSPIConfigExternal(SPI::CS{GPIO::PortH, GPIO::Pin6}),  // FMU CH7 -- CS 4
 	}),
 };
 

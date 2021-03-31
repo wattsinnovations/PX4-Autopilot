@@ -41,28 +41,47 @@ using namespace time_literals;
 
 bool PreFlightCheck::prismCheck(orb_advert_t *mavlink_log_pub, const bool report_fail)
 {
-	bool success = true;
+	PX4_INFO("prismCheck");
 
-	uORB::SubscriptionData<propulsion_id_info_s> info{ORB_ID(propulsion_id_info)};
-	info.update();
+	uORB::SubscriptionData<propulsion_id_info_s> sub{ORB_ID(propulsion_id_info)};
+	sub.update();
 
-	if (info.get().deny_arm) {
+	auto info = sub.get();
 
-		success = false;
+	char error_message[128] = {};
 
-		if (info.get().mismatch) {
-			mavlink_log_critical(mavlink_log_pub, "Fail: Propulsion ID mismatch!");
-		} else {
-			mavlink_log_critical(mavlink_log_pub, "Fail: PRISM is denying arming. Unknown.");
-		}
+	// Check if they're all connected
+	bool all_connected = true && (info.connected[0] == info.connected[1] &&
+				info.connected[1] == info.connected[2] &&
+				info.connected[2] == info.connected[3]);
 
-		for (int i = 0; i < 4; i++) {
-			bool connected = info.get().connected[i];
-			if (!connected) {
-				mavlink_log_critical(mavlink_log_pub, "Fail: Propulsion System %d not connected!", i + 1);
-			}
-		}
+	// Check if Propulsion IDs match
+	bool propulsion_ids_match = info.propulsion_ids[0] == info.propulsion_ids[1] &&
+				info.propulsion_ids[1] == info.propulsion_ids[2] &&
+				info.propulsion_ids[2] == info.propulsion_ids[3];
+
+	// Check if Locations are mutually exclusive
+	bool mutually_exclusive = info.locations[0] != info.locations[1] &&
+				info.locations[1] != info.locations[2] &&
+				info.locations[2] != info.locations[3];
+
+	if (!all_connected) {
+		sprintf(error_message, "Missing Propulsion system(s)\n- Connected: [%d, %d, %d, %d]",
+				info.connected[0], info.connected[1], info.connected[2], info.connected[3]);
+
+	} else if (!propulsion_ids_match) {
+		sprintf(error_message, "Propulsion IDs do not match!\n- IDs: [%d, %d, %d, %d",
+			info.propulsion_ids[0], info.propulsion_ids[1], info.propulsion_ids[2], info.propulsion_ids[3]);
+
+	} else if (!mutually_exclusive) {
+		sprintf(error_message, "Propulsion locations are not mutually exclusive!\n- Locations: [%d, %d, %d, %d",
+			info.locations[0], info.locations[1], info.locations[2], info.locations[3]);
 	}
 
-	return success;
+
+	if (info.deny_arm) {
+		mavlink_log_critical(mavlink_log_pub, "Fail: %s", error_message);
+	}
+
+	return info.deny_arm;
 }
