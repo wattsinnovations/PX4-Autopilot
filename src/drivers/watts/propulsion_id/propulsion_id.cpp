@@ -97,6 +97,7 @@ propulsion_id_info_s PropulsionID::get_propulsion_id_info()
 
 			int index = data.motor_number - 1; // Motor Numbers are 1 indexed.
 
+			// Sanity check
 			if (index < 0) {
 				PX4_WARN("Invalid index %d", index);
 				return info;
@@ -136,7 +137,8 @@ propulsion_id_info_s PropulsionID::get_propulsion_id_info()
 	}
 
 	// Check if they're all connected
-	bool all_connected = true && (info.connected[0] == info.connected[1] &&
+	bool all_connected = (true == info.connected[0] &&
+				info.connected[0] == info.connected[1] &&
 				info.connected[1] == info.connected[2] &&
 				info.connected[2] == info.connected[3]);
 
@@ -175,37 +177,40 @@ propulsion_id_info_s PropulsionID::get_propulsion_id_info()
 	// If all the checks have passed, check if the Propulsion Group is already configured
 	if (all_checks_passed) {
 
-		info.deny_arm = false;
+		int detected_propulsion_group = info.propulsion_ids[0];
+		int configured_propulsion_group = _param_prop_group.get();
 
-		int propulsion_group = _param_prop_group.get();
-		bool configured = info.propulsion_ids[0] == propulsion_group;
-
+		bool configured = detected_propulsion_group == configured_propulsion_group;
 		if (!configured) {
 
+			bool reboot = true;
 			mavlink_log_critical(&mavlink_log_pub, "Propulsion Configuration has changed. Reconfiguring.");
 
 			_param_sys_autoconfig.set(2); // Reload airframe parameters -- PROPULSION_GROUP is
 										  // set in the airframe file
 
-			switch (propulsion_group) {
+			switch (detected_propulsion_group) {
 			case 1:
 				_param_sys_autostart.set(PRISM_AIRFRAME_ID_QUAD);
-				info.reboot = true;
 				break;
 
 			case 2:
-				_param_sys_autostart.set(PRISM_AIRFRAME_ID_QUAD);
-				info.reboot = true;
+				_param_sys_autostart.set(PRISM_AIRFRAME_ID_X8);
 				break;
 
 			default:
-				mavlink_log_critical(&mavlink_log_pub, "Unknown Propulsion Group: %d", propulsion_group);
+				mavlink_log_critical(&mavlink_log_pub, "Unknown Propulsion Group: %d", detected_propulsion_group);
+				reboot = false; // Edge case but we don't want the drone to constantly reboot
 				break;
 			}
 
-			if (info.reboot) {
-				px4_reboot_request();
+			if (reboot) {
+				px4_reboot_request(false, 500000); // Give it half a second to ensure parameters are written
 			}
+
+		} else {
+			// Finally, you may arm :)
+			info.deny_arm = false;
 		}
 
 	} else {

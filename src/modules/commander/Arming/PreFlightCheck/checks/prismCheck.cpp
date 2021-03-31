@@ -41,7 +41,7 @@ using namespace time_literals;
 
 bool PreFlightCheck::prismCheck(orb_advert_t *mavlink_log_pub, const bool report_fail)
 {
-	PX4_INFO("prismCheck");
+	PX4_INFO("Performing PRISM preflight check");
 
 	uORB::SubscriptionData<propulsion_id_info_s> sub{ORB_ID(propulsion_id_info)};
 	sub.update();
@@ -77,7 +77,6 @@ bool PreFlightCheck::prismCheck(orb_advert_t *mavlink_log_pub, const bool report
 		sprintf(error_message, "Propulsion locations are not mutually exclusive!\n- Locations: [%d, %d, %d, %d",
 			info.locations[0], info.locations[1], info.locations[2], info.locations[3]);
 	}
-
 
 	if (info.deny_arm) {
 		mavlink_log_critical(mavlink_log_pub, "Fail: %s", error_message);

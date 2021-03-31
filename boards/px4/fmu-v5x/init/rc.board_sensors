@@ -25,16 +25,12 @@ then
 	# Internal magnetometer on I2c
 	bmm150 -I -R 6 start
 
-	# SPI EEPROM drivers on external (-S) SPI bus (-b) 6 with chip select (-c)
-	# m95040df -S -b 1 -c 1 start
-	# m95040df -S -b 1 -c 2 start
-	# m95040df -S -b 1 -c 3 start
-	# m95040df -S -b 1 -c 4 start
-	# m95040df stop
-	# propulsion_id start
-	# listener propulsion_system_info
-	# listener propulsion_id_info
-
+	# SPI EEPROM drivers on external (-S) SPI bus (-b) with chip select (-c)
+	m95040df -S -b 1 -c 1 start
+	m95040df -S -b 1 -c 2 start
+	m95040df -S -b 1 -c 3 start
+	m95040df -S -b 1 -c 4 start
+	propulsion_id start
 
 else
 	#FMUv5Xbase board orientation
