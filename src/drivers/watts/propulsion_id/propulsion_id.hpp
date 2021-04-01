@@ -72,6 +72,7 @@ private:
 	static constexpr uint32_t PRISM_AIRFRAME_ID_QUAD{9500};
 	static constexpr uint32_t PRISM_AIRFRAME_ID_X8{9501};
 
+	bool _rebooting = false;
 
 	uORB::Publication<propulsion_id_info_s> _propulsion_id_info_pub{ORB_ID::propulsion_id_info};
 

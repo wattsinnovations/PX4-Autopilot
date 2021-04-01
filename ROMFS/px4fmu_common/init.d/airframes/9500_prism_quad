@@ -26,6 +26,15 @@ set MIXER quad_x
 
 set PWM_OUT 1234
 
+echo "Running PRISM Quad airframe script!"
+echo "Running PRISM Quad airframe script!"
+echo "Running PRISM Quad airframe script!"
+echo "Running PRISM Quad airframe script!"
+echo "Running PRISM Quad airframe script!"
+echo "Running PRISM Quad airframe script!"
+echo "Running PRISM Quad airframe script!"
+echo "Running PRISM Quad airframe script!"
+
 param set-default PROPULSION_GROUP 1
 
 # TODO: once we do bringup, this is where all default parameters will go

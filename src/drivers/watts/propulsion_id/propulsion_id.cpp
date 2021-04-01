@@ -181,31 +181,43 @@ propulsion_id_info_s PropulsionID::get_propulsion_id_info()
 		int configured_propulsion_group = _param_prop_group.get();
 
 		bool configured = detected_propulsion_group == configured_propulsion_group;
+
 		if (!configured) {
 
 			bool reboot = true;
 			mavlink_log_critical(&mavlink_log_pub, "Propulsion Configuration has changed. Reconfiguring.");
 
-			_param_sys_autoconfig.set(2); // Reload airframe parameters -- PROPULSION_GROUP is
-										  // set in the airframe file
+			_param_sys_autoconfig.commit_no_notification(1); //- 0: keep params
+											 				 //- 1: reset params
+											 				 //- 2: reset airframe params
+
+			if (!configured_propulsion_group) {
+				// Unprovisioned pixhawk. We set to quad so that at least the correct startup script will run.
+				PX4_WARN("Pixhawk was not provisioned! Setting to Quad airframe type");
+				_param_sys_autostart.commit_no_notification(PRISM_AIRFRAME_ID_QUAD);
+			}
 
 			switch (detected_propulsion_group) {
 			case 1:
-				_param_sys_autostart.set(PRISM_AIRFRAME_ID_QUAD);
+				PX4_WARN("Configuring Quad");
+				_param_sys_autostart.commit_no_notification(PRISM_AIRFRAME_ID_QUAD);
 				break;
 
 			case 2:
-				_param_sys_autostart.set(PRISM_AIRFRAME_ID_X8);
+				PX4_WARN("Configuring X8");
+				_param_sys_autostart.commit_no_notification(PRISM_AIRFRAME_ID_X8);
 				break;
 
 			default:
+				PX4_WARN("Unknown Propulsion Group: %d", detected_propulsion_group);
 				mavlink_log_critical(&mavlink_log_pub, "Unknown Propulsion Group: %d", detected_propulsion_group);
 				reboot = false; // Edge case but we don't want the drone to constantly reboot
 				break;
 			}
 
-			if (reboot) {
-				px4_reboot_request(false, 500000); // Give it half a second to ensure parameters are written
+			if (reboot && !_rebooting) {
+				px4_reboot_request(false, 3000000);
+				_rebooting = true;
 			}
 
 		} else {

@@ -23,6 +23,15 @@ set MIXER octo_cox
 
 set PWM_OUT 12345678
 
+echo "Running PRISM X8 airframe script!"
+echo "Running PRISM X8 airframe script!"
+echo "Running PRISM X8 airframe script!"
+echo "Running PRISM X8 airframe script!"
+echo "Running PRISM X8 airframe script!"
+echo "Running PRISM X8 airframe script!"
+echo "Running PRISM X8 airframe script!"
+echo "Running PRISM X8 airframe script!"
+
 param set-default PROPULSION_GROUP 2
 
 # TODO: once we do bringup, this is where all default parameters will go
