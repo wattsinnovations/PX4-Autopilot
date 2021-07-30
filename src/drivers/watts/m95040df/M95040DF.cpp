@@ -86,10 +86,10 @@ M95040DF::RunImpl()
 	perf_begin(_sample_perf);
 
 	// Check status register to ensure device is alive
-	uint8_t status = RegisterRead(CMD_READ_SR);
+	uint8_t status = register_read(CMD_READ_SR);
 
 	// TODO: magic number
-	if (status != 240) {
+	if (status != STATUS_REG_OKAY) {
 		// PX4_INFO("Status register not 240! Is it connected? --> %d", _devid);
 		perf_count(_comms_errors);
 		return;
@@ -112,11 +112,11 @@ uint32_t M95040DF::read_propulsion_id()
 	// Read propulsion ID page
 	uint32_t propulsion_id = 0;
 	char buf[PAGE_SIZE_BYTES + 1] = {};
-	int ret = ReadPage(PROPULSION_ID_PAGE_NUM, buf);
+	int ret = read_page(PROPULSION_ID_PAGE_NUM, buf);
 	buf[PAGE_SIZE_BYTES] = '\0';
 
 	if (ret != PX4_OK) {
-		// PX4_INFO("ReadPage failed --> %d", ret);
+		// PX4_INFO("read_page failed --> %d", ret);
 		perf_count(_comms_errors);
 		return propulsion_id;
 	}
@@ -131,11 +131,11 @@ uint64_t M95040DF::read_flight_time()
 	// Read flight time page
 	uint64_t flight_time = 0;
 	char buf[PAGE_SIZE_BYTES + 1] = {};
-	int ret = ReadPage(FLIGHT_TIME_PAGE_NUM, buf);
+	int ret = read_page(FLIGHT_TIME_PAGE_NUM, buf);
 	buf[PAGE_SIZE_BYTES] = '\0';
 
 	if (ret != PX4_OK) {
-		// PX4_INFO("ReadPage failed --> %d", ret);
+		// PX4_INFO("read_page failed --> %d", ret);
 		perf_count(_comms_errors);
 		return flight_time;
 	}
@@ -150,11 +150,11 @@ uint8_t M95040DF::read_location()
 	// Read location page
 	uint8_t location = 0;
 	char buf[PAGE_SIZE_BYTES + 1] = {};
-	int ret = ReadPage(LOCATION_PAGE_NUM, buf);
+	int ret = read_page(LOCATION_PAGE_NUM, buf);
 	buf[PAGE_SIZE_BYTES] = '\0';
 
 	if (ret != PX4_OK) {
-		// PX4_INFO("ReadPage failed --> %d", ret);
+		// PX4_INFO("read_page failed --> %d", ret);
 		perf_count(_comms_errors);
 		return location;
 	}
@@ -177,7 +177,7 @@ uint8_t M95040DF::read_location()
 
 // Page numbers are zero indexed. All data is stored as strings and therfore must be converted after reading.
 int
-M95040DF::ReadPage(unsigned page_number, char* data)
+M95040DF::read_page(unsigned page_number, char* data)
 {
 	if (page_number > MEM_SIZE_PAGES - 1) {
 		return -1;
@@ -208,7 +208,7 @@ M95040DF::ReadPage(unsigned page_number, char* data)
 }
 
 uint8_t
-M95040DF::RegisterRead(uint8_t reg)
+M95040DF::register_read(uint8_t reg)
 {
 	uint8_t buf[2] = {};
 

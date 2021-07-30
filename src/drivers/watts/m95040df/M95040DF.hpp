@@ -64,6 +64,8 @@ static constexpr int CMD_WRITE_DIS = 	4;
 static constexpr int CMD_READ_SR = 		5;
 static constexpr int CMD_WRITE_EN = 	6;
 
+static constexpr int STATUS_REG_OKAY =  240;
+
 static constexpr int PROPULSION_ID_PAGE_NUM = 0;
 static constexpr int LOCATION_PAGE_NUM = 1;
 static constexpr int FLIGHT_TIME_PAGE_NUM = 31;
@@ -95,9 +97,9 @@ private:
 	uint32_t 		read_propulsion_id();
 	uint8_t 		read_location();
 
-	int 			ReadPage(unsigned page_number, char* data);
+	int 			read_page(unsigned page_number, char* data);
 
-	uint8_t			RegisterRead(uint8_t reg);
+	uint8_t			register_read(uint8_t reg);
 
 	static constexpr uint32_t SAMPLE_RATE{5}; // samples per second
 

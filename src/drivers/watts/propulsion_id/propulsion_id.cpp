@@ -191,7 +191,7 @@ propulsion_id_info_s PropulsionID::get_propulsion_id_info()
 											 				 //- 1: reset params
 											 				 //- 2: reset airframe params
 
-			if (!configured_propulsion_group) {
+			if (configured_propulsion_group == 0) {
 				// Unprovisioned pixhawk. We set to quad so that at least the correct startup script will run.
 				PX4_WARN("Pixhawk was not provisioned! Setting to Quad airframe type");
 				_param_sys_autostart.commit_no_notification(PRISM_AIRFRAME_ID_QUAD);
